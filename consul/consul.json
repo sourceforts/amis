@@ -46,8 +46,8 @@
     }],
     "provisioners": [{
       "type": "file",
-      "source": "{{template_dir}}/scripts",
-      "destination": "/tmp"
+      "source": "{{template_dir}}/scripts/",
+      "destination": "/tmp/"
     },{
       "type": "shell",
       "inline": [
