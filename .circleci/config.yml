@@ -23,6 +23,8 @@ jobs:
       - attach_workspace:
           at: /sourceforts-amis
       - run: packer build -var aws_region=eu-west-2 consul/consul.json
+      - run: packer build -var aws_region=us-east-1 consul/consul.json
+      - run: packer build -var aws_region=ap-southeast-2 consul/consul.json
 
 workflows:
   version: 2
