@@ -1,0 +1,35 @@
+version: 2
+
+defaults: &defaults
+  working_directory: /sourceforts-amis
+  docker:
+    - image: hashicorp/packer
+
+jobs:
+  validate:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /sourceforts-amis
+      - run: packer validate consul/consul.json
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - ./
+  build:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /sourceforts-amis
+      - run: packer build consul/consul.json
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - validate:
+          context: sourceforts-server
+      - build:
+          context: sourceforts-server
+          requires:
+            - validate
