@@ -6,33 +6,58 @@ defaults: &defaults
     - image: hashicorp/packer
 
 jobs:
-  validate:
+  validate-consul:
     <<: *defaults
     steps:
       - attach_workspace:
           at: /sourceforts-amis
       - checkout
-      - run: packer validate consul/consul.json
+      - run: packer validate consul/build.json
       - persist_to_workspace:
           root: ./
           paths:
             - ./
-  build:
+  build-consul:
     <<: *defaults
     steps:
       - attach_workspace:
           at: /sourceforts-amis
-      - run: packer build -var aws_region=eu-west-2 consul/consul.json
-      - run: packer build -var aws_region=us-east-1 consul/consul.json
-      - run: packer build -var aws_region=ap-southeast-2 consul/consul.json
+      - run: packer build -var aws_region=eu-west-2 consul/build.json
+      - run: packer build -var aws_region=us-east-1 consul/build.json
+      - run: packer build -var aws_region=ap-southeast-2 consul/build.json
+  validate-game-host:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /sourceforts-amis
+      - checkout
+      - run: packer validate game-host/build.json
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - ./
+  build-game-host:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /sourceforts-amis
+      - run: packer build -var aws_region=eu-west-2 game-host/build.json
+      - run: packer build -var aws_region=us-east-1 game-host/build.json
+      - run: packer build -var aws_region=ap-southeast-2 game-host/build.json
 
 workflows:
   version: 2
   main:
     jobs:
-      - validate:
+      - validate-consul:
           context: sourceforts-server
-      - build:
+      - build-consul:
           context: sourceforts-server
           requires:
-            - validate
+            - validate-consul
+      - validate-game-host:
+          context: sourceforts-server
+      - build-game-host:
+          context: sourceforts-server
+          requires:
+            - validate-game-host

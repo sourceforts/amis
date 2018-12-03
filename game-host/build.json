@@ -2,40 +2,21 @@
     "min_packer_version": "0.12.0",
     "variables": {
       "aws_region": "eu-west-2",
-      "consul_version": "1.2.2",
+      "consul_version": "1.4.0",
       "download_url": "{{env `CONSUL_DOWNLOAD_URL`}}"
     },
     "builders": [{
-      "name": "ubuntu16-ami",
-      "ami_name": "consul-ubuntu-{{isotime | clean_ami_name}}",
-      "ami_description": "An Ubuntu 16.04 AMI that has Consul installed.",
-      "instance_type": "t2.micro",
-      "region": "{{user `aws_region`}}",
-      "type": "amazon-ebs",
-      "source_ami_filter": {
-        "filters": {
-          "virtualization-type": "hvm",
-          "architecture": "x86_64",
-          "name": "*ubuntu-xenial-16.04-amd64-server-*",
-          "block-device-mapping.volume-type": "gp2",
-          "root-device-type": "ebs"
-        },
-        "owners": ["099720109477"],
-        "most_recent": true
-      },
-      "ssh_username": "ubuntu"
-    },{
       "name": "amazon-linux-ami",
-      "ami_name": "consul-amazon-linux-{{isotime | clean_ami_name}}",
-      "ami_description": "An Amazon Linux AMI that has Consul installed.",
-      "instance_type": "t2.micro",
+      "ami_name": "game-host-amazon-linux-{{isotime | clean_ami_name}}",
+      "ami_description": "An Amazon Linux AMI for game hosts",
+      "instance_type": "t2.nano",
       "region": "{{user `aws_region`}}",
       "type": "amazon-ebs",
       "source_ami_filter": {
         "filters": {
           "virtualization-type": "hvm",
           "architecture": "x86_64",
-          "name": "*amzn-ami-hvm-*",
+          "name": "amzn-ami-*-amazon-ecs-optimized",
           "block-device-mapping.volume-type": "gp2",
           "root-device-type": "ebs"
         },
@@ -46,7 +27,7 @@
     }],
     "provisioners": [{
       "type": "file",
-      "source": "{{template_dir}}/scripts/",
+      "source": "{{template_dir}}/../global/",
       "destination": "/tmp/"
     },{
       "type": "shell",
@@ -56,7 +37,9 @@
         "else",
         " /tmp/install-consul/install-consul.sh --version {{user `consul_version`}};",
         "fi",
-        "/tmp/install-dnsmasq/install-dnsmasq.sh"
+        "/tmp/install-dnsmasq/install-dnsmasq.sh",
+        "ln -fs /usr/share/zoneinfo/UTC /etc/localtime",
+        "yum install -y awslogs jq aws-cli"
       ],
       "pause_before": "30s"
     }]

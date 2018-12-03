@@ -38,6 +38,7 @@ function print_usage {
   echo -e "  --client\t\tIf set, run in client mode. Optional. Exactly one of --server or --client must be set."
   echo -e "  --cluster-tag-key\tAutomatically form a cluster with Instances that have this tag key and the tag value in --cluster-tag-value. Optional."
   echo -e "  --cluster-tag-value\tAutomatically form a cluster with Instances that have the tag key in --cluster-tag-key and this tag value. Optional."
+  echo -e "  --cluster-aws-regions\Available AWS regions to discover other agents. Optional."
   echo -e "  --datacenter\t\tThe name of the datacenter Consul is running in. Optional. If not specified, will default to AWS region name."
   echo -e "  --config-dir\t\tThe path to the Consul config folder. Optional. Default is the absolute path of '../config', relative to this script."
   echo -e "  --data-dir\t\tThe path to the Consul data folder. Optional. Default is the absolute path of '../data', relative to this script."
@@ -213,20 +214,21 @@ function generate_consul_config {
   local -r user="${3}"
   local -r cluster_tag_key="${4}"
   local -r cluster_tag_value="${5}"
-  local -r datacenter="${6}"
-  local -r enable_gossip_encryption="${7}"
-  local -r gossip_encryption_key="${8}"
-  local -r enable_rpc_encryption="${9}"
-  local -r ca_path="${10}"
-  local -r cert_file_path="${11}"
-  local -r key_file_path="${12}"
-  local -r cleanup_dead_servers="${13}"
-  local -r last_contact_threshold="${14}"
-  local -r max_trailing_logs="${15}"
-  local -r server_stabilization_time="${16}"
-  local -r redundancy_zone_tag="${17}"
-  local -r disable_upgrade_migration="${18}"
-  local -r upgrade_version_tag=${19}
+  local -r cluster_aws_regions="${6}"
+  local -r datacenter="${7}"
+  local -r enable_gossip_encryption="${8}"
+  local -r gossip_encryption_key="${9}"
+  local -r enable_rpc_encryption="${10}"
+  local -r ca_path="${11}"
+  local -r cert_file_path="${12}"
+  local -r key_file_path="${13}"
+  local -r cleanup_dead_servers="${14}"
+  local -r last_contact_threshold="${15}"
+  local -r max_trailing_logs="${16}"
+  local -r server_stabilization_time="${17}"
+  local -r redundancy_zone_tag="${18}"
+  local -r disable_upgrade_migration="${19}"
+  local -r upgrade_version_tag=${20}
   local -r config_path="$config_dir/$CONSUL_CONFIG_FILE"
 
   local instance_id=""
@@ -242,6 +244,8 @@ function generate_consul_config {
   if [[ -z "$cluster_tag_key" || -z "$cluster_tag_value" ]]; then
     log_warn "Either the cluster tag key ($cluster_tag_key) or value ($cluster_tag_value) is empty. Will not automatically try to form a cluster based on EC2 tags."
   else
+
+
     retry_join_json=$(cat <<EOF
 "retry_join": ["provider=aws region=$instance_region tag_key=$cluster_tag_key tag_value=$cluster_tag_value"],
 EOF
@@ -253,7 +257,17 @@ EOF
     local instance_tags=""
     local cluster_size=""
 
-    instance_tags=$(get_instance_tags "$instance_id" "$instance_region")
+    IFS=\, read -a fields <<< $cluster_aws_regions
+
+    if [ ! -z $cluster_aws_regions ]; then
+      for region in "$cluster_aws_regions"
+      do
+        instance_tags=$(get_instance_tags "$instance_id" "$region")
+      done
+    else
+      instance_tags=$(get_instance_tags "$instance_id" "$instance_region")
+    fi
+
     cluster_size=$(get_cluster_size "$instance_tags" "$instance_region")
 
     bootstrap_expect="\"bootstrap_expect\": $cluster_size,"
@@ -363,6 +377,7 @@ function run {
   local user=""
   local cluster_tag_key=""
   local cluster_tag_value=""
+  local cluster_aws_regions=""
   local datacenter=""
   local upgrade_version_tag=""
   local enable_gossip_encryption="false"
@@ -424,6 +439,11 @@ function run {
       --cluster-tag-value)
         assert_not_empty "$key" "$2"
         cluster_tag_value="$2"
+        shift
+        ;;
+      --cluster-aws-regions)
+        assert_not_empty "$key" "$2"
+        cluster_aws_regions="$2"
         shift
         ;;
       --datacenter)
@@ -564,6 +584,7 @@ function run {
       "$user" \
       "$cluster_tag_key" \
       "$cluster_tag_value" \
+      "$cluster_aws_regions" \
       "$datacenter" \
       "$enable_gossip_encryption" \
       "$gossip_encryption_key" \
