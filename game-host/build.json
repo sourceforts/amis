@@ -32,14 +32,13 @@
     },{
       "type": "shell",
       "inline": [
+        "/tmp/init.sh",
         "if test -n \"{{user `download_url`}}\"; then",
         " /tmp/install-consul/install-consul.sh --download-url {{user `download_url`}};",
         "else",
         " /tmp/install-consul/install-consul.sh --version {{user `consul_version`}};",
         "fi",
         "/tmp/install-dnsmasq/install-dnsmasq.sh",
-        "ln -fs /usr/share/zoneinfo/UTC /etc/localtime",
-        "yum install -y awslogs"
       ],
       "pause_before": "30s"
     }]

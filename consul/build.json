@@ -6,25 +6,6 @@
       "download_url": "{{env `CONSUL_DOWNLOAD_URL`}}"
     },
     "builders": [{
-      "name": "ubuntu16-ami",
-      "ami_name": "consul-ubuntu-{{isotime | clean_ami_name}}",
-      "ami_description": "An Ubuntu 16.04 AMI that has Consul installed.",
-      "instance_type": "t2.nano",
-      "region": "{{user `aws_region`}}",
-      "type": "amazon-ebs",
-      "source_ami_filter": {
-        "filters": {
-          "virtualization-type": "hvm",
-          "architecture": "x86_64",
-          "name": "*ubuntu-xenial-16.04-amd64-server-*",
-          "block-device-mapping.volume-type": "gp2",
-          "root-device-type": "ebs"
-        },
-        "owners": ["099720109477"],
-        "most_recent": true
-      },
-      "ssh_username": "ec2-user"
-    },{
       "name": "amazon-linux-ami",
       "ami_name": "consul-amazon-linux-{{isotime | clean_ami_name}}",
       "ami_description": "An Amazon Linux AMI that has Consul installed.",
@@ -51,13 +32,13 @@
     },{
       "type": "shell",
       "inline": [
+        "/tmp/init.sh",
         "if test -n \"{{user `download_url`}}\"; then",
         " /tmp/install-consul/install-consul.sh --download-url {{user `download_url`}};",
         "else",
         " /tmp/install-consul/install-consul.sh --version {{user `consul_version`}};",
         "fi",
-        "/tmp/install-dnsmasq/install-dnsmasq.sh",
-        "ln -fs /usr/share/zoneinfo/UTC /etc/localtime"
+        "/tmp/install-dnsmasq/install-dnsmasq.sh"
       ],
       "pause_before": "30s"
     }]
