@@ -38,7 +38,7 @@
         "else",
         " /tmp/install-consul/install-consul.sh --version {{user `consul_version`}};",
         "fi",
-        "/tmp/install-dnsmasq/install-dnsmasq.sh",
+        "/tmp/install-dnsmasq/install-dnsmasq.sh"
       ],
       "pause_before": "30s"
     }]
