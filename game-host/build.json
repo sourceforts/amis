@@ -38,7 +38,8 @@
         " /tmp/install-consul/install-consul.sh --version {{user `consul_version`}};",
         "fi",
         "/tmp/install-dnsmasq/install-dnsmasq.sh",
-        "ln -fs /usr/share/zoneinfo/UTC /etc/localtime"
+        "ln -fs /usr/share/zoneinfo/UTC /etc/localtime",
+        "yum install -y awslogs"
       ],
       "pause_before": "30s"
     }]
